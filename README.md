@@ -74,6 +74,21 @@ powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 > 两个已知前提：Docker Desktop 要开着（第 3 步）；Python 要能跑（第 1 步）。
 > 没有 Docker 也能用，自己准备 PostgreSQL 16 + pgvector，把 `DATABASE_URL` 写进 `.env`，跳过第 3 步即可。
 
+## 升级
+
+已经装好了，想更新到最新代码：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\upgrade-windows.ps1
+```
+
+四步：`git pull` → 重装内核并重启 → 用官方 `dsh plugin` 同步插件 → 重启心跳。
+
+**数据不受影响**：对话、事实、定时任务都在 Postgres 里，升级只换代码。
+
+> 插件通过 `file:` 依赖指向仓库里的 `integrations/dsh-memory-plugin`，
+> 所以升级后重启 DSH 就能加载新代码，不用重新发布。
+
 ## 从这里开始
 
 | 我想… | 看哪 |

@@ -110,7 +110,15 @@ for ($i = 0; $i -lt 20; $i++) {
 if (-not $up) { Warn "内核未就绪，看 kernel.err.log" }
 
 Step 6 "安装 DSH 插件"
-& powershell -ExecutionPolicy Bypass -File (Join-Path $Root "scripts\install-desktop-plugin.ps1")
+$dshCli = "D:\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+if (Test-Path $dshCli) {
+  $env:CI = "true"
+  $pluginPath = (Join-Path $Root "integrations\dsh-memory-plugin") -replace "\\", "/"
+  & cmd /c "`"$dshCli`" plugin --profile desktop add `"file:$pluginPath`" 2>&1" | Out-Null
+}
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dshCli)) {
+  & powershell -ExecutionPolicy Bypass -File (Join-Path $Root "scripts\install-desktop-plugin.ps1")
+}
 Ok "插件已写入 DSH desktop profile（重启 DSH 后生效）"
 
 Step 7 "启动心跳并注册开机自启"
