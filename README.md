@@ -49,6 +49,31 @@ cron 按**本地时间**匹配，错过那一分钟会自动补一次。
 三天没动静的会话，自动压成三五条要点，存成可跨会话召回的事实——
 否则那些对话只会躺在库里，再也不会被读到。
 
+## 装到另一台电脑（Windows）
+
+一条命令，把内核、数据库、插件、心跳全部装好：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
+```
+
+它会按顺序做七件事：
+
+| 步骤 | 做什么 | 失败时 |
+|---|---|---|
+| 1 | 检查 Python 3.11+ | 提示去官网装 |
+| 2 | 建 `.venv` 并 `pip install -e .` | 打印 pip 最后几行 |
+| 3 | `docker compose up -d postgres`，等 healthy | 提示看容器日志 |
+| 4 | 缺 `.env` 时从 `.env.example` 生成 | 保留已有 `.env` |
+| 5 | 起内核，轮询 `/health` | 提示看 `kernel.err.log` |
+| 6 | 把插件写进 DSH desktop profile | 沿用 `install-desktop-plugin.ps1` |
+| 7 | 起 30 秒心跳，写登录自启 | 提示手动双击 |
+
+装完还剩两步手动的：**填 `OPENAI_API_KEY`**，然后**重启 DSH**。
+
+> 两个已知前提：Docker Desktop 要开着（第 3 步）；Python 要能跑（第 1 步）。
+> 没有 Docker 也能用，自己准备 PostgreSQL 16 + pgvector，把 `DATABASE_URL` 写进 `.env`，跳过第 3 步即可。
+
 ## 从这里开始
 
 | 我想… | 看哪 |
