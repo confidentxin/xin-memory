@@ -1,6 +1,7 @@
 {
   "name": "@memory-kernel/dsh-memory",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "description": "Cordis plugin that recalls and persists DeepSeek Harness turns through the memory-kernel HTTP API.",

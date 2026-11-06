@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "memory-kernel"
 version = "0.1.0"
 description = "一期自托管记忆内核：L0 Episode、L1 Fact、L2 Profile"
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
