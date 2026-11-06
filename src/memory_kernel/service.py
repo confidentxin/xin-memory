@@ -527,7 +527,9 @@ class MemoryService:
             with self.connect() as conn:
                 if store.has_session_summary(conn, session_id):
                     continue
-                episodes = store.list_episodes(conn, scope, limit=200)
+                # Newest rows, not the oldest: a long session must still digest
+                # today's part of the conversation.
+                episodes = store.last_episodes(conn, scope, limit=200)
                 if not episodes:
                     continue
                 # One-line sessions ("1", "hello") are not worth a digest; they would

@@ -67,3 +67,20 @@ def test_digest_reaches_l1_but_not_the_profile(svc: MemoryService, users):
     result = svc.recall(scope, "摘要压缩")
     profile_section = result.prompt.split("【相关事实")[0]
     assert "纪要" not in profile_section
+
+
+def test_last_episodes_returns_the_newest_rows(svc: MemoryService, users):
+    """A digest must see today's tail, not the oldest 200 rows of a long session."""
+    from memory_kernel import store
+
+    scope = users()
+    base = datetime.now(timezone.utc) - timedelta(hours=5)
+    for index in range(5):
+        svc.append_episode(scope, "user", f"第{index}条", occurred_at=base + timedelta(minutes=index))
+
+    with svc.connect() as conn:
+        newest = store.last_episodes(conn, scope, limit=3)
+        oldest = store.list_episodes(conn, scope, limit=3)
+
+    assert [item.content for item in newest] == ["第2条", "第3条", "第4条"]
+    assert [item.content for item in oldest] == ["第0条", "第1条", "第2条"]

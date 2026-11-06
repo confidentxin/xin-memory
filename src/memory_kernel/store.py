@@ -190,6 +190,32 @@ def list_episodes(conn, scope: Scope, limit: int = 50) -> list[Episode]:
     return [_episode(row) for row in rows]
 
 
+def last_episodes(conn, scope: Scope, limit: int = 200) -> list[Episode]:
+    """Newest `limit` episodes, returned oldest→newest for transcript order.
+
+    `list_episodes` sorts ASC, so on a long session it hands back the *oldest*
+    rows and a digest would stop before reaching today's conversation.
+    """
+    params = _scope_params(scope, limit=limit)
+    session_clause = ""
+    if scope.session_id:
+        session_clause = "AND session_id = %(session_id)s"
+        params["session_id"] = scope.session_id
+    rows = conn.execute(
+        f"""
+        SELECT {EPISODE_SELECT}
+        FROM episodes
+        WHERE user_id = %(user_id)s
+          AND agent_id = %(agent_id)s
+          {session_clause}
+        ORDER BY occurred_at DESC
+        LIMIT %(limit)s
+        """,
+        params,
+    ).fetchall()
+    return [_episode(row) for row in reversed(rows)]
+
+
 def recent_episodes(conn, scope: Scope, as_of: datetime, limit: int = 40) -> list[Episode]:
     params = _scope_params(scope, as_of=as_of, limit=limit)
     if scope.session_id:

@@ -102,6 +102,9 @@ DSH 关闭时文件会滞留，下次启动自动送达。
    已由 `injectionMessage` 的 `randomUUID()` 保证。
 5. **助手回复不入库**：`assistant/message` 的事件体是 `{turn, step, message, ...}`，
    消息在 `event.data.message` 里。`captureEvent` 已兼容两种形状。
+6. **cron 只匹配那一分钟**：机器睡眠/关机错过 10:00，就整天不跑。已加补跑
+   （`agenda.last_occurrence_today` + `store.stale_cron_triggers`）：当天只要还没跑过，
+   开机后第一次 tick 会补一次，每天最多一次，多天漏跑只补一天。
 
 ## 验收
 
