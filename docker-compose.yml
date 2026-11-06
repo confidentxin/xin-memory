@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: memory
+      POSTGRES_PASSWORD: memory
+      POSTGRES_DB: memory
+    ports:
+      - "54329:5432"
+    volumes:
+      - memory_pg:/var/lib/postgresql/data
+      - ./src/memory_kernel/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memory -d memory"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  api:
+    profiles: ["app"]
+    build: .
+    environment:
+      DATABASE_URL: postgresql://memory:memory@postgres:5432/memory
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_EXTRACT_MODEL: ${OPENAI_EXTRACT_MODEL:-gpt-4o-mini}
+      OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+      MEMORY_API_HOST: 0.0.0.0
+      MEMORY_API_PORT: 8741
+    ports:
+      - "8741:8741"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  memory_pg:

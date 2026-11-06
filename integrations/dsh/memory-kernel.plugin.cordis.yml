@@ -1,0 +1,11 @@
+# DSH overlay when you have not installed the plugin bundle.
+# If `dsh plugin add` already inserted id memory-kernel-plugin, do not load this file too.
+- insert:
+    - id: memory-kernel-plugin
+      name: '@memory-kernel/dsh-memory'
+      config:
+        kernelUrl: !!js process.env.KERNEL_URL || 'http://127.0.0.1:8741'
+        userId: !!js process.env.MEMORY_USER_ID || 'default'
+        agentId: !!js process.env.MEMORY_AGENT_ID || ''
+        budget: !!js Number(process.env.MEMORY_BUDGET || 1200)
+        autoExtract: true

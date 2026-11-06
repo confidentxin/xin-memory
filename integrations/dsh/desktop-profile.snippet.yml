@@ -1,0 +1,12 @@
+# Append this block to %USERPROFILE%\.dsh\profiles\desktop\cordis.patch.yml
+# if that id is not already present. Restart the desktop app afterwards.
+# scripts/install-desktop-plugin.ps1 does the copy and the merge.
+- insert:
+    - id: memory-kernel-plugin
+      name: '@memory-kernel/dsh-memory'
+      config:
+        kernelUrl: !!js process.env.KERNEL_URL || 'http://127.0.0.1:8741'
+        userId: !!js process.env.MEMORY_USER_ID || 'default'
+        agentId: ''
+        budget: 1200
+        autoExtract: true

@@ -1,0 +1,9 @@
+# Same MCP server over Streamable HTTP. Run `memory-kernel-mcp --transport http` first.
+# DSH does not start this process; the URL must already be listening.
+- insert:
+    - id: memory-kernel-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: memory_kernel
+        transport: streamable-http
+        url: !!js process.env.KERNEL_MCP_URL || 'http://127.0.0.1:8742/mcp'

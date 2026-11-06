@@ -1,0 +1,23 @@
+# Optional: automatic turn memory plus explicit MCP tools.
+# The plugin writes episodes. MCP tools are for recall, remember, profile, and intents.
+# Neither path calls tick. Keep `memory-kernel tick` (or POST /tick) as the only scheduler.
+# Do not combine this file with `dsh plugin add` of the same plugin id.
+- insert:
+    - id: memory-kernel-plugin
+      name: '@memory-kernel/dsh-memory'
+      config:
+        kernelUrl: !!js process.env.KERNEL_URL || 'http://127.0.0.1:8741'
+        userId: !!js process.env.MEMORY_USER_ID || 'default'
+        budget: 1200
+        autoExtract: true
+    - id: memory-kernel-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: memory_kernel
+        transport: stdio
+        command: memory-kernel-mcp
+        args: ['--transport', 'stdio']
+        env:
+          KERNEL_URL: !!js process.env.KERNEL_URL || 'http://127.0.0.1:8741'
+          MEMORY_USER_ID: !!js process.env.MEMORY_USER_ID || 'default'
+        cwd: !!js process.cwd()

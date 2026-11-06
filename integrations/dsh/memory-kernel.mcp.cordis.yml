@@ -1,0 +1,16 @@
+# DSH overlay: MCP tools only. Start the kernel first (`memory-kernel serve`).
+# Tools show up as mcp__memory_kernel__recall, mcp__memory_kernel__remember, and so on.
+# stdio is what `dsh web --patch` expects from @deepseek-ai/dsh-mcp-client.
+- insert:
+    - id: memory-kernel-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: memory_kernel
+        transport: stdio
+        command: memory-kernel-mcp
+        args: ['--transport', 'stdio']
+        env:
+          KERNEL_URL: !!js process.env.KERNEL_URL || 'http://127.0.0.1:8741'
+          MEMORY_USER_ID: !!js process.env.MEMORY_USER_ID || 'default'
+          MEMORY_AGENT_ID: !!js process.env.MEMORY_AGENT_ID || ''
+        cwd: !!js process.cwd()
