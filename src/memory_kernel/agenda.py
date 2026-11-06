@@ -128,6 +128,22 @@ def valid_cron(expression: str) -> bool:
     return True
 
 
+def last_occurrence_today(expression: str, moment: datetime) -> datetime | None:
+    """Latest time today (<= moment, local clock) that the expression matches.
+
+    cron only matches its exact minute, so a machine that was asleep or off at
+    10:00 would never run a daily job. This lets tick catch up once per day.
+    """
+    now = ensure_utc(moment).astimezone()
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    cursor = now.replace(second=0, microsecond=0)
+    while cursor >= start:
+        if cron_matches(expression, cursor):
+            return cursor
+        cursor -= timedelta(minutes=1)
+    return None
+
+
 def cron_matches(expression: str, moment: datetime) -> bool:
     """Match a 5-field cron (minute hour dom month dow) of stars and integers.
 

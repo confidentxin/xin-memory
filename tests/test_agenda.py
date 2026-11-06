@@ -249,3 +249,35 @@ def test_valid_cron_helper():
     assert valid_cron("0 9 * *") is False
     assert valid_cron("0 25 * * *") is False
     assert valid_cron("0 9 * * mom") is False
+
+def test_cron_catches_up_after_a_missed_minute(svc: MemoryService, users):
+    """10:00 job still runs at 10:37 if the machine was asleep at 10:00."""
+    scope = users()
+    intent = svc.create_intent(scope, "每天十点的活", cron="0 10 * * *", metadata={"mode": "act"})
+
+    at_1037 = datetime(2026, 11, 7, 10, 37).astimezone()
+    fired = svc.tick(user_id=scope.user_id, now=at_1037)
+    assert len(fired.fired) == 1
+    assert fired.fired[0].intent_id == intent.id
+
+    # Same day, later: no second catch-up.
+    assert svc.tick(user_id=scope.user_id, now=datetime(2026, 11, 7, 15, 0).astimezone()).fired == []
+
+    # Next day it runs again.
+    assert len(svc.tick(user_id=scope.user_id, now=datetime(2026, 11, 8, 10, 5).astimezone()).fired) == 1
+
+
+def test_cron_does_not_catch_up_before_its_time(svc: MemoryService, users):
+    scope = users()
+    svc.create_intent(scope, "还没到点", cron="0 10 * * *")
+    assert svc.tick(user_id=scope.user_id, now=datetime(2026, 11, 7, 9, 30).astimezone()).fired == []
+
+
+def test_last_occurrence_today_helper():
+    from memory_kernel.agenda import last_occurrence_today
+
+    at = datetime(2026, 11, 7, 10, 37).astimezone()
+    found = last_occurrence_today("0 10 * * *", at)
+    assert found is not None
+    assert (found.hour, found.minute) == (10, 0)
+    assert last_occurrence_today("0 23 * * *", at) is None

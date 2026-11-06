@@ -12,6 +12,7 @@ import psycopg
 from memory_kernel.agenda import (
     cron_matches,
     extract_intent_drafts,
+    last_occurrence_today,
     policy_for,
     proposed_action_text,
     render_action_episode,
@@ -666,10 +667,21 @@ class MemoryService:
             due = store.due_once_triggers(conn, moment, user_id, limit)
             cron_rows = store.due_cron_triggers(conn, moment, user_id, limit)
             bare = store.due_intents_without_trigger(conn, moment, user_id, limit)
+            day_start = moment.astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
+            stale = store.stale_cron_triggers(conn, day_start, user_id, limit)
         queued: list[tuple[Intent, Trigger | None]] = list(due)
         seen = {intent.id for intent, _trigger in queued}
         for intent, trigger in cron_rows:
             if intent.id in seen or not trigger.expression or not cron_matches(trigger.expression, moment):
+                continue
+            queued.append((intent, trigger))
+            seen.add(intent.id)
+        # Catch-up: a daily job whose minute passed while the machine slept would
+        # otherwise be skipped for the whole day. Fire at most once per day.
+        for intent, trigger in stale:
+            if intent.id in seen or not trigger.expression:
+                continue
+            if last_occurrence_today(trigger.expression, moment) is None:
                 continue
             queued.append((intent, trigger))
             seen.add(intent.id)

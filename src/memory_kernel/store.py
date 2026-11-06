@@ -913,6 +913,69 @@ def due_cron_triggers(conn, now: datetime, user_id: str | None, limit: int) -> l
     return items
 
 
+def stale_cron_triggers(conn, day_start: datetime, user_id: str | None, limit: int) -> list[tuple[Intent, Trigger]]:
+    """Enabled cron triggers that have not fired since `day_start`."""
+    params: dict[str, Any] = {"day_start": day_start, "limit": limit}
+    user_clause = _user_clause(user_id, params)
+    rows = conn.execute(
+        f"""
+        SELECT
+            i.id AS i_id, i.user_id, i.agent_id, i.session_id, i.title, i.description,
+            i.status, i.due_at, i.priority, i.source_episode_ids, i.metadata,
+            i.created_at, i.updated_at,
+            t.id AS t_id, t.intent_id, t.type, t.expression, t.at, t.enabled,
+            t.last_fired_at, t.created_at AS t_created_at
+        FROM triggers t
+        JOIN intents i ON i.id = t.intent_id
+        WHERE t.enabled = TRUE
+          AND t.type = 'cron'
+          AND t.expression IS NOT NULL
+          AND i.status IN ('open', 'in_progress')
+          AND (t.last_fired_at IS NULL OR t.last_fired_at < %(day_start)s)
+          {user_clause}
+        ORDER BY i.priority DESC
+        LIMIT %(limit)s
+        """,
+        params,
+    ).fetchall()
+    items: list[tuple[Intent, Trigger]] = []
+    for row in rows:
+        items.append(
+            (
+                _intent(
+                    {
+                        "id": row["i_id"],
+                        "user_id": row["user_id"],
+                        "agent_id": row["agent_id"],
+                        "session_id": row["session_id"],
+                        "title": row["title"],
+                        "description": row["description"],
+                        "status": row["status"],
+                        "due_at": row["due_at"],
+                        "priority": row["priority"],
+                        "source_episode_ids": row["source_episode_ids"],
+                        "metadata": row["metadata"],
+                        "created_at": row["created_at"],
+                        "updated_at": row["updated_at"],
+                    }
+                ),
+                _trigger(
+                    {
+                        "id": row["t_id"],
+                        "intent_id": row["intent_id"],
+                        "type": row["type"],
+                        "expression": row["expression"],
+                        "at": row["at"],
+                        "enabled": row["enabled"],
+                        "last_fired_at": row["last_fired_at"],
+                        "created_at": row["t_created_at"],
+                    }
+                ),
+            )
+        )
+    return items
+
+
 def due_intents_without_trigger(conn, now: datetime, user_id: str | None, limit: int) -> list[Intent]:
     params: dict[str, Any] = {"now": now, "limit": limit}
     user_clause = _user_clause(user_id, params)
