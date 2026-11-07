@@ -111,8 +111,12 @@ def list_episodes(
     user_id: str = Query(...),
     agent_id: str = Query(""),
     session_id: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=500),
 ):
-    return service.list_episodes(Scope(user_id=user_id, agent_id=agent_id, session_id=session_id))
+    return service.list_episodes(
+        Scope(user_id=user_id, agent_id=agent_id, session_id=session_id),
+        limit=limit,
+    )
 
 
 @app.get("/entities")

@@ -579,10 +579,10 @@ class MemoryService:
         with self.connect() as conn:
             return store.list_facts(conn, scope, include_inactive=include_inactive, visible=False, limit=500)
 
-    def list_episodes(self, scope: Scope) -> list[Episode]:
+    def list_episodes(self, scope: Scope, limit: int = 50) -> list[Episode]:
         self._check_scope(scope, require_session=False)
         with self.connect() as conn:
-            return store.list_episodes(conn, scope)
+            return store.list_episodes(conn, scope, limit=limit)
 
     def list_entities(self, user_id: str):
         if not user_id.strip():

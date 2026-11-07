@@ -45,3 +45,13 @@ def test_http_roundtrip(svc, users):
 
         missing = client.post("/forget", json={"user_id": scope.user_id})
         assert missing.status_code == 400
+
+
+def test_episodes_limit_is_tunable(svc, users):
+    """/episodes used to be stuck at 50, which hid older rows while debugging."""
+    scope = users()
+    for index in range(5):
+        svc.append_episode(scope, "user", f"第{index}条")
+
+    assert len(svc.list_episodes(scope)) == 5
+    assert len(svc.list_episodes(scope, limit=2)) == 2
