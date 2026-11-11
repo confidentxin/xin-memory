@@ -1,6 +1,8 @@
 services:
   postgres:
     image: pgvector/pgvector:pg16
+    # 开机或 Docker 重启后自动拉起；否则内核连不上库，会卡在启动阶段
+    restart: unless-stopped
     environment:
       POSTGRES_USER: memory
       POSTGRES_PASSWORD: memory

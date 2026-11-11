@@ -89,6 +89,32 @@ powershell -ExecutionPolicy Bypass -File scripts\upgrade-windows.ps1
 > 插件通过 `file:` 依赖指向仓库里的 `integrations/dsh-memory-plugin`，
 > 所以升级后重启 DSH 就能加载新代码，不用重新发布。
 
+## 坏了怎么办
+
+一条命令自检并修复（数据库 → 内核 → 心跳，逐层修，健康的步骤自动跳过）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\ensure-running.ps1
+```
+
+输出会告诉你修了什么：
+
+```
+   OK  postgres 正在运行
+   OK  postgres healthy
+   FIX 内核已重启
+   FIX 心跳已启动
+已修复 2 项
+```
+
+现在整套的存活边界是这样的：
+
+| 谁挂了 | 谁会救它 |
+|---|---|
+| 数据库容器 | `restart: unless-stopped`，Docker 起来就跟着起 |
+| 内核 | 上面的脚本（或手动 `start-kernel.cmd`） |
+| 心跳 | 上面的脚本 |
+| DSH 重启 | 需要跑一次上面的脚本 |
 ## 从这里开始
 
 | 我想… | 看哪 |
